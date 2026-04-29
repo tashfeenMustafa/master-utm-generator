@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, Inter } from "next/font/google";
+import { Outfit, Inter } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { StorageInitializer } from "@/components/layout/storage-initializer";
 import "./globals.css";
 
-const dmSerifDisplay = DM_Serif_Display({
-  weight: "400",
+const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-primary",
+  display: "swap",
 });
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-body",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -28,8 +30,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSerifDisplay.variable} ${inter.variable}`}>
+    <html lang="en" className={`${outfit.variable} ${inter.variable}`}>
       <body className="antialiased">
+        <StorageInitializer />
         <TooltipProvider>
           <div className="flex h-dvh">
             <Sidebar />

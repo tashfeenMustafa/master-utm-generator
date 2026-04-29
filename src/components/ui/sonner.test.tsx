@@ -51,8 +51,8 @@ describe("Toaster", () => {
     await screen.findByText("Link generated!");
     const toastContainer = document.querySelector("[data-type='success']");
     expect(toastContainer).toBeInTheDocument();
-    expect(toastContainer?.className).toContain("!bg-[#F4FFF0]");
-    expect(toastContainer?.className).toContain("!text-[#004D23]");
+    expect(toastContainer?.className).toContain("!bg-indigo-50");
+    expect(toastContainer?.className).toContain("!text-indigo-900");
   });
 
   it("displays an error toast with correct styling", async () => {
@@ -75,7 +75,7 @@ describe("Toaster", () => {
     await screen.findByText("Approaching limit");
     const toastContainer = document.querySelector("[data-type='warning']");
     expect(toastContainer).toBeInTheDocument();
-    expect(toastContainer?.className).toContain("!bg-[#F4FFCC]");
+    expect(toastContainer?.className).toContain("!bg-amber-50");
   });
 
   it("displays an info toast with correct styling", async () => {
@@ -86,7 +86,7 @@ describe("Toaster", () => {
     await screen.findByText("Helpful info");
     const toastContainer = document.querySelector("[data-type='info']");
     expect(toastContainer).toBeInTheDocument();
-    expect(toastContainer?.className).toContain("!bg-[#EFF0F6]");
+    expect(toastContainer?.className).toContain("!bg-indigo-50");
   });
 
   it("renders a close button on toasts", async () => {

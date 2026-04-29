@@ -26,6 +26,9 @@ import {
   Facebook,
   Chrome,
   Linkedin,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -45,6 +48,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { MOCK_ADS_DATA } from "@/lib/mock/ads-data";
+import { analyzeUrl } from "@/lib/utm-health";
+import { cn } from "@/lib/utils";
 import type { AdCampaign, AdPlatform, AdCampaignStatus } from "@/lib/types";
 
 // ── Platform display config ──────────────────────────────────────
@@ -87,6 +92,51 @@ function CopyTemplateButton({ template }: { template: string }) {
         </Button>
       </TooltipTrigger>
       <TooltipContent>Copy UTM Template</TooltipContent>
+    </Tooltip>
+  );
+}
+
+// ── Health status indicator ──────────────────────────────────────
+function HealthIndicator({ url }: { url: string }) {
+  const report = useMemo(() => analyzeUrl(url), [url]);
+
+  if (report.status === "healthy") {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center justify-center size-5 text-green-500">
+            <CheckCircle2 className="size-4" />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>UTM configuration is healthy</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className={cn(
+          "flex items-center justify-center size-5 rounded-full cursor-help",
+          report.status === "warning" ? "text-amber-500" : "text-destructive"
+        )}>
+          {report.status === "warning" ? <AlertCircle className="size-4" /> : <XCircle className="size-4" />}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs p-0 overflow-hidden border-none shadow-lg">
+        <div className={cn("p-2 text-xs font-bold uppercase tracking-wider", 
+          report.status === "warning" ? "bg-amber-100 text-amber-950" : "bg-red-100 text-red-950")}>
+          Audit Findings ({report.findings.length})
+        </div>
+        <div className="p-3 space-y-2 bg-white">
+          {report.findings.filter(f => f.type !== "success").map((f, i) => (
+            <div key={i} className="flex gap-2 leading-tight">
+              <span className="text-[10px] uppercase font-black text-neutral-400 mt-0.5 shrink-0">[{f.type}]</span>
+              <span className="text-neutral-700">{f.message}</span>
+            </div>
+          ))}
+        </div>
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -140,6 +190,17 @@ export function AdsTable() {
   // ── Column definitions ────────────────────────────────────────
   const columns = useMemo<ColumnDef<AdCampaign>[]>(
     () => [
+      {
+        id: "health",
+        header: "",
+        cell: ({ row }) => {
+          if (row.getIsGrouped()) return null;
+          return <HealthIndicator url={row.original.utmTemplate} />;
+        },
+        size: 40,
+        enableSorting: false,
+        enableGrouping: false,
+      },
       {
         accessorKey: "utmTemplate",
         header: "UTM URL",

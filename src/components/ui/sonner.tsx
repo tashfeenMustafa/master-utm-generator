@@ -27,10 +27,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       toastOptions={{
         classNames: {
-          success: "!bg-[#F4FFF0] !text-[#004D23] !border-[#004D23]/20",
+          success: "!bg-indigo-50 !text-indigo-900 !border-indigo-200",
           error: "!bg-red-50 !text-red-900 !border-red-200",
-          warning: "!bg-[#F4FFCC] !text-[#1a1a1a] !border-[#F4FFCC]",
-          info: "!bg-[#EFF0F6] !text-[#1a1a1a] !border-[#EFF0F6]",
+          warning: "!bg-amber-50 !text-amber-900 !border-amber-200",
+          info: "!bg-indigo-50 !text-indigo-900 !border-indigo-200",
         },
       }}
       style={

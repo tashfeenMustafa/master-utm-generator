@@ -1,3 +1,5 @@
+"use client";
+
 import { Megaphone, Info } from "lucide-react";
 import { AdPlatformStatus } from "@/components/ads/ad-platform-status";
 import { AdsTable } from "@/components/ads/ads-table";
@@ -17,7 +19,7 @@ export default function AdsPage() {
 
       <AdPlatformStatus />
 
-      <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
+      <div className="flex items-start gap-2 rounded-md border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-200">
         <Info className="size-4 mt-0.5 shrink-0" />
         <p>
           Showing mock data. Connect your ad accounts in{" "}

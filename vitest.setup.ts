@@ -5,3 +5,11 @@ import { afterEach } from "vitest";
 afterEach(() => {
   cleanup();
 });
+
+// Polyfill ResizeObserver for jsdom — required by cmdk (Command/Combobox components)
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;

@@ -15,6 +15,7 @@ export interface UtmLink {
   utm_campaign: string;
   utm_term?: string;
   utm_content?: string;
+  customParams?: Record<string, string>; // Extra params like utm_id
   generatedUrl: string;
   createdAt: string; // ISO 8601
 }
@@ -61,6 +62,58 @@ export interface AdCampaign {
   utm_content?: string;
   utmTemplate: string; // full URL template with placeholders like {{campaign.name}}
   lastUpdated: string; // ISO 8601
+}
+
+// ── Phase 2: Customizable Sources & Mediums ──────────────────────
+
+export interface UtmMedium {
+  id: string;
+  value: string; // snake_case
+  label: string; // display name
+  createdAt: string;
+}
+
+export interface SourceType {
+  id: string;
+  name: string;
+  utm_source: string;
+  utm_medium: string;
+  platforms: string[]; // referenced by value from PlatformConfig
+  isDefault?: boolean; // System-provided defaults
+  createdAt: string;
+}
+
+// ── Phase 2: Premium & Account ──────────────────────────────────
+
+export type UserPlan = "free" | "pro" | "team";
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  plan: UserPlan;
+  isPremium: boolean;
+  joinedAt: string;
+}
+
+// ── Phase 2: Naming Conventions ────────────────────────────────
+
+export type NamingRule = "snake_case" | "lowercase" | "none";
+
+export interface ParameterConvention {
+  parameter: ManageableParameter;
+  rule: NamingRule;
+  prefix?: string;
+  suffix?: string;
+}
+
+export interface NamingConventions {
+  utm_campaign: ParameterConvention;
+  utm_term: ParameterConvention;
+  utm_content: {
+    rule: "format-hook" | "snake_case";
+    separator: string;
+  };
 }
 
 // Abstracts storage for testability — defaults to window.localStorage

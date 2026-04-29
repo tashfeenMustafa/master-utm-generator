@@ -40,10 +40,10 @@ describe("ResultCard", () => {
     expect(screen.getByText(mockLink.generatedUrl)).toBeInTheDocument();
   });
 
-  it("renders the platform badge", () => {
+  it("renders the success badge", () => {
     render(<ResultCard link={mockLink} onDismiss={onDismiss} />);
     const badge = screen.getByTestId("result-card").querySelector("[data-slot='badge']");
-    expect(badge).toHaveTextContent("facebook");
+    expect(badge).toHaveTextContent("Success");
   });
 
   it("renders the formatted timestamp", () => {
@@ -109,9 +109,9 @@ describe("ResultCard", () => {
     expect(onDismiss).toHaveBeenCalled();
   });
 
-  it("has the light green background", () => {
-    render(<ResultCard link={mockLink} onDismiss={onDismiss} />);
+  it("has the light blue background", () => {
+    render(<ResultCard link={mockLink} onDismiss={vi.fn()} />);
     const card = screen.getByTestId("result-card");
-    expect(card.className).toContain("bg-[#F4FFF0]");
+    expect(card.className).toContain("bg-indigo-50");
   });
 });

@@ -13,6 +13,8 @@ import {
   deleteConnection,
   updateConnection,
   deleteValuesBySource,
+  exportValues,
+  importValues,
 } from "./storage";
 
 // In-memory StorageAdapter for testing (no window.localStorage needed)
@@ -363,5 +365,55 @@ describe("corrupted data handling", () => {
       removeItem: () => {},
     };
     expect(getLinks(undefined, adapter)).toEqual([]);
+  });
+});
+
+// ── Export / Import ─────────────────────────────────────────────
+
+describe("Export / Import", () => {
+  let adapter: StorageAdapter;
+
+  beforeEach(() => {
+    adapter = createMockAdapter();
+  });
+
+  it("exports values as a JSON string", () => {
+    addValue(
+      { parameter: "utm_campaign", value: "sale", label: "Sale", source: "manual", sourceRef: null },
+      adapter
+    );
+    const json = exportValues(adapter);
+    const parsed = JSON.parse(json);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].value).toBe("sale");
+  });
+
+  it("imports valid values and ignores duplicates", () => {
+    addValue(
+      { parameter: "utm_campaign", value: "existing", label: "Existing", source: "manual", sourceRef: null },
+      adapter
+    );
+    const importJson = JSON.stringify([
+      { parameter: "utm_campaign", value: "existing", label: "Existing" },
+      { parameter: "utm_term", value: "new", label: "New Term" },
+    ]);
+    const result = importValues(importJson, adapter);
+    expect(result.imported).toBe(1);
+    expect(result.skipped).toBe(1);
+    expect(getValues(undefined, adapter)).toHaveLength(2);
+  });
+
+  it("throws error for invalid JSON import", () => {
+    expect(() => importValues("invalid-json", adapter)).toThrow();
+  });
+
+  it("skips malformed values in import", () => {
+    const importJson = JSON.stringify([
+      { value: "missing-param", label: "Malformed" },
+      { parameter: "utm_campaign", value: "valid", label: "Valid" },
+    ]);
+    const result = importValues(importJson, adapter);
+    expect(result.imported).toBe(1);
+    expect(result.skipped).toBe(1);
   });
 });

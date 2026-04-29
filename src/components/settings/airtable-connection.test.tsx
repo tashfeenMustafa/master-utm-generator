@@ -11,6 +11,13 @@ vi.mock("sonner", () => ({
   },
 }));
 
+// Mock next/navigation so PaywallOverlay's useRouter() doesn't crash in tests
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  usePathname: () => "/settings/connections",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 // Mock storage module
 vi.mock("@/lib/storage", () => ({
   getConnections: vi.fn(() => []),
@@ -35,6 +42,14 @@ vi.mock("@/lib/storage", () => ({
     id: "val-1",
     createdAt: new Date().toISOString(),
     ...data,
+  })),
+  getUser: vi.fn(() => ({
+    id: "local-user",
+    email: "demo@example.com",
+    name: "Demo User",
+    plan: "free",
+    isPremium: true,
+    joinedAt: new Date().toISOString(),
   })),
 }));
 

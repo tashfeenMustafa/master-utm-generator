@@ -14,7 +14,7 @@ import {
   type SortingState,
   type GroupingState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Copy, Trash2, Check, ChevronRight, ChevronDown, Search, X } from "lucide-react";
+import { ArrowUpDown, Copy, Trash2, Check, ChevronRight, ChevronDown, Search, X, Link2, QrCode, AlertCircle, CheckCircle2, XCircle, Share2, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,9 +43,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getLinks, deleteLink, getConnections } from "@/lib/storage";
+import { analyzeUrl } from "@/lib/utm-health";
 import type { UtmLink } from "@/lib/types";
 import { ExportDropdown } from "@/components/organic/export-dropdown";
+import { QrCodeModal } from "@/components/organic/qr-code-modal";
+import { EmptyState } from "@/components/organic/empty-state";
+import { cn } from "@/lib/utils";
 
 // ── Copy button with feedback ────────────────────────────────────
 function CopyButton({ url }: { url: string }) {
@@ -71,6 +83,79 @@ function CopyButton({ url }: { url: string }) {
       </TooltipTrigger>
       <TooltipContent>Copy URL</TooltipContent>
     </Tooltip>
+  );
+}
+
+// ── Health status indicator ──────────────────────────────────────
+function HealthIndicator({ url }: { url: string }) {
+  const report = useMemo(() => analyzeUrl(url), [url]);
+
+  if (report.status === "healthy") {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center justify-center size-5 text-green-500">
+            <CheckCircle2 className="size-4" />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>UTM configuration is healthy</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className={cn(
+          "flex items-center justify-center size-5 rounded-full cursor-help",
+          report.status === "warning" ? "text-amber-500" : "text-destructive"
+        )}>
+          {report.status === "warning" ? <AlertCircle className="size-4" /> : <XCircle className="size-4" />}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs p-0 overflow-hidden border-none shadow-lg">
+        <div className={cn("p-2 text-xs font-bold uppercase tracking-wider", 
+          report.status === "warning" ? "bg-amber-100 text-amber-950" : "bg-red-100 text-red-950")}>
+          Audit Findings ({report.findings.length})
+        </div>
+        <div className="p-3 space-y-2 bg-white text-dark-bg">
+          {report.findings.filter(f => f.type !== "success").map((f, i) => (
+            <div key={i} className="flex gap-2 leading-tight">
+              <span className="text-[10px] uppercase font-black text-neutral-400 mt-0.5 shrink-0">[{f.type}]</span>
+              <span className="text-neutral-700">{f.message}</span>
+            </div>
+          ))}
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+// ── QR button with modal ─────────────────────────────────────────
+function QrButton({ url, campaign }: { url: string; campaign: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => setOpen(true)}
+            aria-label="Show QR code"
+          >
+            <QrCode className="size-3.5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>QR Code</TooltipContent>
+      </Tooltip>
+      <QrCodeModal
+        open={open}
+        onOpenChange={setOpen}
+        url={url}
+        label={campaign}
+      />
+    </>
   );
 }
 
@@ -131,12 +216,76 @@ const GROUP_BY_OPTIONS = [
   { value: "utm_content", label: "utm_content" },
 ] as const;
 
+// ── Mobile Link Card ─────────────────────────────────────────────
+function MobileLinkCard({ link, onDeleted }: { link: UtmLink; onDeleted: () => void }) {
+  const [openQr, setOpenQr] = useState(false);
+  
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(link.generatedUrl);
+    toast.success("URL copied");
+  };
+
+  const handleShare = async () => {
+    const text = `Tracking link for ${link.utm_campaign}: ${link.generatedUrl}`;
+    await navigator.clipboard.writeText(text);
+    toast.success("Share message copied");
+  };
+
+  return (
+    <div className="bg-white border rounded-xl p-4 space-y-3 shadow-sm md:hidden">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <HealthIndicator url={link.generatedUrl} />
+          <Badge variant="secondary" className="text-[10px] uppercase font-bold tracking-wider">
+            {link.utm_source}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon-xs" onClick={handleCopy}><Copy className="size-3.5" /></Button>
+          <Button variant="ghost" size="icon-xs" onClick={() => setOpenQr(true)}><QrCode className="size-3.5" /></Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-xs"><MoreVertical className="size-3.5" /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleShare} className="gap-2">
+                <Share2 className="size-4" /> Share Link
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => { deleteLink(link.id); onDeleted(); toast.success("Deleted"); }}
+                className="text-destructive gap-2"
+              >
+                <Trash2 className="size-4" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-xs font-black text-indigo-950 truncate">{link.utm_campaign}</p>
+        <p className="text-[10px] font-mono text-indigo-600/70 truncate break-all">{link.generatedUrl}</p>
+      </div>
+
+      <div className="flex gap-3 text-[10px] text-muted-foreground pt-1 border-t border-slate-50">
+        <span>{link.utm_medium}</span>
+        {link.utm_term && <span>• {link.utm_term}</span>}
+        <span className="ml-auto">{formatDate(link.createdAt)}</span>
+      </div>
+
+      <QrCodeModal open={openQr} onOpenChange={setOpenQr} url={link.generatedUrl} label={link.utm_campaign} />
+    </div>
+  );
+}
+
 // ── Main component ───────────────────────────────────────────────
 interface LinksTableProps {
   refreshKey: number;
+  onAction?: () => void;
 }
 
-export function LinksTable({ refreshKey }: LinksTableProps) {
+export function LinksTable({ refreshKey, onAction }: LinksTableProps) {
   const [links, setLinks] = useState<UtmLink[]>(() => getLinks());
   const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
@@ -148,9 +297,7 @@ export function LinksTable({ refreshKey }: LinksTableProps) {
   }, []);
 
   useEffect(() => {
-    if (refreshKey > 0) {
-      loadLinks();
-    }
+    loadLinks();
   }, [loadLinks, refreshKey]);
 
   // Debounced search
@@ -164,15 +311,26 @@ export function LinksTable({ refreshKey }: LinksTableProps) {
   const columns = useMemo<ColumnDef<UtmLink>[]>(
     () => [
       {
+        id: "health",
+        header: "",
+        cell: ({ row }) => {
+          if (row.getIsGrouped()) return null;
+          return <HealthIndicator url={row.original.generatedUrl} />;
+        },
+        size: 40,
+        enableSorting: false,
+        enableGrouping: false,
+      },
+      {
         accessorKey: "generatedUrl",
-        header: "Full URL",
+        header: "Generated URL",
         cell: ({ getValue, row }) => {
           if (row.getIsGrouped()) return null;
           const url = getValue<string>();
           return (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="block max-w-[300px] truncate font-mono text-xs">
+                <span className="block max-w-[200px] lg:max-w-[300px] truncate font-mono text-xs">
                   {url}
                 </span>
               </TooltipTrigger>
@@ -204,19 +362,27 @@ export function LinksTable({ refreshKey }: LinksTableProps) {
         cell: ({ getValue }) => <span className="text-xs font-medium">{getValue<string>()}</span>,
       },
       {
-        accessorKey: "utm_term",
-        header: "Term",
-        cell: ({ getValue }) => {
-          const val = getValue<string | undefined>();
-          return <span className="text-xs text-muted-foreground">{val || "—"}</span>;
-        },
-      },
-      {
-        accessorKey: "utm_content",
-        header: "Content",
-        cell: ({ getValue }) => {
-          const val = getValue<string | undefined>();
-          return <span className="text-xs text-muted-foreground">{val || "—"}</span>;
+        id: "custom_params",
+        header: "Advanced",
+        cell: ({ row }) => {
+          const params = row.original.customParams;
+          if (!params || Object.keys(params).length === 0) return <span className="text-muted-foreground text-[10px]">—</span>;
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="text-[9px] border-indigo-100 text-indigo-600 bg-indigo-50/30">
+                  {Object.keys(params).length} custom
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="p-2 space-y-1">
+                {Object.entries(params).map(([k, v]) => (
+                  <div key={k} className="text-[10px] font-mono">
+                    <span className="text-indigo-300">{k}:</span> {v}
+                  </div>
+                ))}
+              </TooltipContent>
+            </Tooltip>
+          );
         },
       },
       {
@@ -237,6 +403,7 @@ export function LinksTable({ refreshKey }: LinksTableProps) {
           return (
             <div className="flex items-center gap-0.5">
               <CopyButton url={row.original.generatedUrl} />
+              <QrButton url={row.original.generatedUrl} campaign={row.original.utm_campaign} />
               <DeleteButton id={row.original.id} onDeleted={loadLinks} />
             </div>
           );
@@ -286,15 +453,7 @@ export function LinksTable({ refreshKey }: LinksTableProps) {
 
   // ── Empty state ───────────────────────────────────────────────
   if (links.length === 0) {
-    return (
-      <div
-        className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center text-muted-foreground"
-        data-testid="empty-state"
-      >
-        <p>No UTM links generated yet.</p>
-        <p className="text-sm">Click &quot;Generate UTM Link&quot; to create your first one.</p>
-      </div>
-    );
+    return <EmptyState onAction={onAction || (() => {})} />;
   }
 
   return (
@@ -357,8 +516,8 @@ export function LinksTable({ refreshKey }: LinksTableProps) {
         </div>
       )}
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-md border">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto rounded-md border bg-white">
         <table className="w-full text-sm">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -429,12 +588,23 @@ export function LinksTable({ refreshKey }: LinksTableProps) {
         </table>
       </div>
 
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {table.getFilteredRowModel().rows.map((row) => (
+          <MobileLinkCard key={row.id} link={row.original} onDeleted={loadLinks} />
+        ))}
+        {table.getFilteredRowModel().rows.length === 0 && (
+          <div className="py-12 text-center text-muted-foreground border border-dashed rounded-xl">
+            No links found.
+          </div>
+        )}
+      </div>
+
       {/* Pagination */}
       {table.getPageCount() > 1 && (
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground text-xs">
+        <div className="flex items-center justify-between text-sm pt-2">
+          <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
             Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-            {" "}({table.getFilteredRowModel().rows.length} links)
           </span>
           <div className="flex gap-1">
             <Button

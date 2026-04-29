@@ -8,6 +8,50 @@ export const CHANNEL_TYPES = [
 
 export type ChannelType = (typeof CHANNEL_TYPES)[number]["value"];
 
+// ── Defaults for Seeding ─────────────────────────────────────────
+
+export const DEFAULT_MEDIUMS = [
+  { label: "Organic Social", value: "organic_social" },
+  { label: "Organic Search", value: "organic_search" },
+  { label: "Warm DMs", value: "warm_dms" },
+  { label: "Cold DMs", value: "cold_dms" },
+  { label: "Paid Social", value: "paid_social" },
+  { label: "Paid Search", value: "paid_search" },
+  { label: "Email", value: "email" },
+  { label: "Referral", value: "referral" },
+];
+
+export const DEFAULT_SOURCE_TYPES = [
+  { 
+    name: "Organic Social", 
+    utm_source: "auto", 
+    utm_medium: "organic_social", 
+    platforms: ["facebook", "instagram", "linkedin", "tiktok", "x_twitter", "reddit"],
+    isDefault: true
+  },
+  { 
+    name: "Blog", 
+    utm_source: "google", 
+    utm_medium: "organic_search", 
+    platforms: ["google"],
+    isDefault: true
+  },
+  { 
+    name: "Warm DMs", 
+    utm_source: "auto", 
+    utm_medium: "warm_dms", 
+    platforms: ["instagram", "linkedin", "tiktok", "x_twitter", "facebook", "reddit"],
+    isDefault: true
+  },
+  { 
+    name: "Cold DMs", 
+    utm_source: "auto", 
+    utm_medium: "cold_dms", 
+    platforms: ["instagram", "linkedin", "tiktok", "x_twitter", "facebook", "reddit"],
+    isDefault: true
+  },
+];
+
 // ── Platforms ────────────────────────────────────────────────────
 export interface PlatformConfig {
   value: string;
@@ -16,7 +60,7 @@ export interface PlatformConfig {
   postFormats: string[];
 }
 
-const SOCIAL_PLATFORMS: PlatformConfig[] = [
+export const SOCIAL_PLATFORMS: PlatformConfig[] = [
   { value: "facebook", label: "Facebook", utmSource: "facebook", postFormats: ["Reels", "Image", "Carousel", "Text"] },
   { value: "instagram", label: "Instagram", utmSource: "instagram", postFormats: ["Reels", "Image", "Carousel"] },
   { value: "linkedin", label: "LinkedIn", utmSource: "linkedin", postFormats: ["Reels", "Image", "Carousel", "Text", "Article"] },
@@ -25,14 +69,14 @@ const SOCIAL_PLATFORMS: PlatformConfig[] = [
   { value: "reddit", label: "Reddit", utmSource: "reddit", postFormats: ["Image", "Carousel", "Text"] },
 ];
 
-const BLOG_PLATFORM: PlatformConfig = {
+export const BLOG_PLATFORM: PlatformConfig = {
   value: "google",
   label: "Google",
   utmSource: "google",
   postFormats: [],
 };
 
-const DM_PLATFORMS: PlatformConfig[] = [
+export const DM_PLATFORMS: PlatformConfig[] = [
   { value: "instagram", label: "Instagram", utmSource: "instagram", postFormats: ["Reels", "Image", "Carousel"] },
   { value: "linkedin", label: "LinkedIn", utmSource: "linkedin", postFormats: ["Reels", "Image", "Carousel", "Text", "Article"] },
   { value: "tiktok", label: "TikTok", utmSource: "tiktok", postFormats: ["Video", "Image", "Carousel"] },
@@ -40,6 +84,12 @@ const DM_PLATFORMS: PlatformConfig[] = [
   { value: "facebook", label: "Facebook", utmSource: "facebook", postFormats: ["Reels", "Image", "Carousel", "Text"] },
   { value: "reddit", label: "Reddit", utmSource: "reddit", postFormats: ["Image", "Carousel", "Text"] },
 ];
+
+export const ALL_PLATFORMS = Array.from(
+  new Map(
+    [...SOCIAL_PLATFORMS, BLOG_PLATFORM, ...DM_PLATFORMS].map((p) => [p.value, p])
+  ).values()
+);
 
 export function getPlatformsForChannel(channel: ChannelType): PlatformConfig[] {
   switch (channel) {

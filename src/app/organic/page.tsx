@@ -13,6 +13,8 @@ import {
 import { UtmGeneratorForm } from "@/components/organic/utm-generator-form";
 import { ResultCard } from "@/components/organic/result-card";
 import { LinksTable } from "@/components/organic/links-table";
+import { IntroSection } from "@/components/organic/intro-section";
+import { PremiumFeatureBanner } from "@/components/layout/premium-feature-banner";
 import type { UtmLink } from "@/lib/types";
 
 export default function OrganicPage() {
@@ -27,28 +29,48 @@ export default function OrganicPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="text-2xl font-bold">Organic & DMs</h1>
-          <p className="mt-1 text-muted-foreground">
-            Generate UTM links for organic social media posts and direct messages.
+          <h1 className="text-3xl font-black text-indigo-950 tracking-tight">Organic & DMs</h1>
+          <p className="text-muted-foreground mt-1">
+            Build pixel-perfect tracking links for social media and direct messages.
           </p>
         </div>
-        <Button onClick={() => setDrawerOpen(true)}>
+        <Button 
+          onClick={() => setDrawerOpen(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 gap-2 font-bold"
+        >
           <Plus className="size-4" />
           Generate UTM Link
         </Button>
       </div>
 
+      <PremiumFeatureBanner />
+
+      <IntroSection />
+
       {lastGenerated && (
-        <ResultCard
-          link={lastGenerated}
-          onDismiss={() => setLastGenerated(null)}
-        />
+        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+          <ResultCard
+            link={lastGenerated}
+            onDismiss={() => setLastGenerated(null)}
+          />
+        </div>
       )}
 
-      <LinksTable refreshKey={refreshKey} />
+      <LinksTable refreshKey={refreshKey} onAction={() => setDrawerOpen(true)} />
+
+      {/* Sticky Mobile CTA */}
+      <div className="fixed bottom-20 right-6 md:hidden z-40">
+        <Button 
+          onClick={() => setDrawerOpen(true)}
+          size="icon"
+          className="h-14 w-14 rounded-full bg-indigo-600 hover:bg-indigo-700 shadow-2xl shadow-indigo-300 ring-4 ring-white"
+        >
+          <Plus className="size-6" />
+        </Button>
+      </div>
 
       {/* Generator Drawer */}
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>

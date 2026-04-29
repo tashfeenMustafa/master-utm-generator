@@ -49,6 +49,7 @@ import {
   addValue,
 } from "@/lib/storage";
 import { toSnakeCase } from "@/lib/utils/to-snake-case";
+import { PaywallOverlay } from "@/components/shared/paywall-overlay";
 import type { DataConnection, ManageableParameter } from "@/lib/types";
 
 type ConnectionState =
@@ -384,7 +385,7 @@ export function AirtableConnection() {
 
   const statusColor =
     connection?.status === "active"
-      ? "text-green-500"
+      ? "text-indigo-500"
       : connection?.status === "error"
         ? "text-red-500"
         : "text-muted-foreground";
@@ -413,72 +414,77 @@ export function AirtableConnection() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Database className="size-5" />
-            <div>
-              <CardTitle>Airtable</CardTitle>
-              <CardDescription>
-                Import UTM values from an Airtable base
-              </CardDescription>
-            </div>
-          </div>
-          {state !== "disconnected" && (
-            <Badge
-              variant={
-                connection?.status === "active"
-                  ? "default"
-                  : connection?.status === "error"
-                    ? "destructive"
-                    : "secondary"
-              }
-              className="flex items-center gap-1"
-            >
-              <CircleDot className={`size-3 ${statusColor}`} />
-              {statusLabel}
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* State: Disconnected — PAT input */}
-        {state === "disconnected" && (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Connect your Airtable account to import campaign, term, and
-              content values from a base.
-            </p>
-            <div className="space-y-2">
-              <Label htmlFor="airtable-pat">Personal Access Token</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="airtable-pat"
-                  type="password"
-                  placeholder="pat..."
-                  value={patInput}
-                  onChange={(e) => setPatInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleConnect();
-                  }}
-                />
-                <Button onClick={handleConnect} disabled={connecting || !patInput.trim()}>
-                  {connecting ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    "Connect"
-                  )}
-                </Button>
+    <PaywallOverlay 
+      featureName="Cloud Sync: Airtable" 
+      description="This feature is currently undergoing maintenance and will be available soon for Pro users."
+    >
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Database className="size-5" />
+              <div>
+                <CardTitle>Airtable</CardTitle>
+                <CardDescription>
+                  Import UTM values from an Airtable base
+                </CardDescription>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Create a token at airtable.com/create/tokens with
-                &quot;data.records:read&quot; and &quot;schema.bases:read&quot;
-                scopes.
-              </p>
             </div>
+            {state !== "disconnected" && (
+              <Badge
+                variant={
+                  connection?.status === "active"
+                    ? "default"
+                    : connection?.status === "error"
+                      ? "destructive"
+                      : "secondary"
+                }
+                className="flex items-center gap-1"
+              >
+                <CircleDot className={`size-3 ${statusColor}`} />
+                {statusLabel}
+              </Badge>
+            )}
           </div>
-        )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+
+          {/* State: Disconnected — PAT input */}
+          {state === "disconnected" && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Connect your Airtable account to import campaign, term, and
+                content values from a base.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="airtable-pat">Personal Access Token</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="airtable-pat"
+                    type="password"
+                    placeholder="pat..."
+                    value={patInput}
+                    onChange={(e) => setPatInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleConnect();
+                    }}
+                  />
+                  <Button onClick={handleConnect} disabled={connecting || !patInput.trim()}>
+                    {connecting ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      "Connect"
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Create a token at airtable.com/create/tokens with
+                  &quot;data.records:read&quot; and &quot;schema.bases:read&quot;
+                  scopes.
+                </p>
+              </div>
+            </div>
+          )}
 
         {/* State: Authenticated — Base selector */}
         {state === "authenticated" && (
@@ -678,5 +684,6 @@ export function AirtableConnection() {
         )}
       </CardContent>
     </Card>
+  </PaywallOverlay>
   );
 }

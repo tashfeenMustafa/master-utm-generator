@@ -55,8 +55,9 @@ describe("Sidebar", () => {
     mockPathname = "/organic";
   });
 
-  it("renders all three navigation items", () => {
+  it("renders all four navigation items", () => {
     render(<Sidebar />);
+    expect(getNavLink("Dashboard")).toBeInTheDocument();
     expect(getNavLink("Organic & DMs")).toBeInTheDocument();
     expect(getNavLink("Ads")).toBeInTheDocument();
     expect(getNavLink("Settings")).toBeInTheDocument();
@@ -64,6 +65,7 @@ describe("Sidebar", () => {
 
   it("renders correct hrefs for each nav item", () => {
     render(<Sidebar />);
+    expect(getNavLink("Dashboard")).toHaveAttribute("href", "/dashboard");
     expect(getNavLink("Organic & DMs")).toHaveAttribute("href", "/organic");
     expect(getNavLink("Ads")).toHaveAttribute("href", "/ads");
     expect(getNavLink("Settings")).toHaveAttribute("href", "/settings");
@@ -71,27 +73,27 @@ describe("Sidebar", () => {
 
   it("renders the collapsed and expanded logo text", () => {
     render(<Sidebar />);
-    expect(screen.getByText("G")).toBeInTheDocument();
-    expect(screen.getByText("Get Levrg - Master UTM Generator")).toBeInTheDocument();
+    expect(screen.getByText("M")).toBeInTheDocument();
+    expect(screen.getByText("MagicUTMs")).toBeInTheDocument();
   });
 
   it("marks the active nav item when pathname matches exactly", () => {
     mockPathname = "/ads";
     render(<Sidebar />);
-    expect(getNavLink("Ads")?.className).toContain("bg-white/15");
+    expect(getNavLink("Ads")?.className).toContain("bg-indigo-600");
   });
 
   it("marks the active nav item when pathname is a sub-route", () => {
     mockPathname = "/settings/values";
     render(<Sidebar />);
-    expect(getNavLink("Settings")?.className).toContain("bg-white/15");
+    expect(getNavLink("Settings")?.className).toContain("bg-indigo-600");
   });
 
   it("does not mark non-active items as active", () => {
     mockPathname = "/organic";
     render(<Sidebar />);
-    expect(getNavLink("Ads")?.className).not.toContain("bg-white/15");
-    expect(getNavLink("Settings")?.className).not.toContain("bg-white/15");
+    expect(getNavLink("Ads")?.className).not.toContain("bg-indigo-600");
+    expect(getNavLink("Settings")?.className).not.toContain("bg-indigo-600");
   });
 
   it("renders as an aside with a nav element", () => {
