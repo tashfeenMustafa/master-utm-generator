@@ -29,6 +29,7 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -173,6 +174,11 @@ export function AdsTable() {
   const [sorting, setSorting] = useState<SortingState>([{ id: "lastUpdated", desc: true }]);
   const [grouping, setGrouping] = useState<GroupingState>([]);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -181,11 +187,14 @@ export function AdsTable() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Column filters for status
-  const columnFilters: ColumnFiltersState = useMemo(
-    () => (statusFilter === "all" ? [] : [{ id: "status", value: statusFilter }]),
-    [statusFilter]
-  );
+  // Column filters for status — must use useState + useEffect so TanStack Table
+  // has a proper onColumnFiltersChange handler (prevents "state update before mount" error)
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  useEffect(() => {
+    setColumnFilters(
+      statusFilter === "all" ? [] : [{ id: "status", value: statusFilter }]
+    );
+  }, [statusFilter]);
 
   // ── Column definitions ────────────────────────────────────────
   const columns = useMemo<ColumnDef<AdCampaign>[]>(
@@ -304,13 +313,23 @@ export function AdsTable() {
     []
   );
 
+  // ── Table state ──────────────────────────────────────────────
+  const tableState = useMemo(() => ({
+    sorting,
+    globalFilter: debouncedSearch,
+    grouping,
+    columnFilters,
+  }), [sorting, debouncedSearch, grouping, columnFilters]);
+
   // ── Table instance ────────────────────────────────────────────
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter: debouncedSearch, grouping, columnFilters },
+    state: tableState,
     onSortingChange: setSorting,
     onGroupingChange: setGrouping,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setDebouncedSearch,
     globalFilterFn: (row, _columnId, filterValue: string) => {
       const q = filterValue.toLowerCase();
       const r = row.original;
@@ -340,6 +359,16 @@ export function AdsTable() {
 
   function handleGroupByChange(value: string) {
     setGrouping(value === "none" ? [] : [value]);
+  }
+
+  // ── Mounted guard ─────────────────────────────────────────────
+  if (!mounted) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center text-muted-foreground min-h-[400px]">
+        <Loader2 className="size-6 animate-spin mb-2" />
+        <p className="text-sm">Initializing table...</p>
+      </div>
+    );
   }
 
   // ── Empty state ───────────────────────────────────────────────

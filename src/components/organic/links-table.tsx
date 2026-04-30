@@ -14,7 +14,7 @@ import {
   type SortingState,
   type GroupingState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Copy, Trash2, Check, ChevronRight, ChevronDown, Search, X, Link2, QrCode, AlertCircle, CheckCircle2, XCircle, Share2, MoreVertical } from "lucide-react";
+import { ArrowUpDown, Copy, Trash2, Check, ChevronRight, ChevronDown, Search, X, Link2, QrCode, AlertCircle, CheckCircle2, XCircle, Share2, MoreVertical, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -290,6 +290,11 @@ export function LinksTable({ refreshKey, onAction }: LinksTableProps) {
   const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
   const [grouping, setGrouping] = useState<GroupingState>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Reload links from storage
   const loadLinks = useCallback(() => {
@@ -415,13 +420,21 @@ export function LinksTable({ refreshKey, onAction }: LinksTableProps) {
     [loadLinks]
   );
 
+  // ── Table state ──────────────────────────────────────────────
+  const tableState = useMemo(() => ({
+    sorting,
+    globalFilter: debouncedSearch,
+    grouping,
+  }), [sorting, debouncedSearch, grouping]);
+
   // ── Table instance ────────────────────────────────────────────
   const table = useReactTable({
     data: links,
     columns,
-    state: { sorting, globalFilter: debouncedSearch, grouping },
+    state: tableState,
     onSortingChange: setSorting,
     onGroupingChange: setGrouping,
+    onGlobalFilterChange: setDebouncedSearch,
     globalFilterFn: (row, _columnId, filterValue: string) => {
       const q = filterValue.toLowerCase();
       const r = row.original;
@@ -449,6 +462,16 @@ export function LinksTable({ refreshKey, onAction }: LinksTableProps) {
 
   function handleGroupByChange(value: string) {
     setGrouping(value === "none" ? [] : [value]);
+  }
+
+  // ── Mounted guard ─────────────────────────────────────────────
+  if (!mounted) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center text-muted-foreground min-h-[400px]">
+        <Loader2 className="size-6 animate-spin mb-2 text-indigo-500" />
+        <p className="text-sm font-medium">Initializing link library...</p>
+      </div>
+    );
   }
 
   // ── Empty state ───────────────────────────────────────────────
