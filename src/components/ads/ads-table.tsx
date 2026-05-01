@@ -174,11 +174,7 @@ export function AdsTable() {
   const [sorting, setSorting] = useState<SortingState>([{ id: "lastUpdated", desc: true }]);
   const [grouping, setGrouping] = useState<GroupingState>([]);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
 
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -187,14 +183,18 @@ export function AdsTable() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Column filters for status — must use useState + useEffect so TanStack Table
-  // has a proper onColumnFiltersChange handler (prevents "state update before mount" error)
+  // Column filters for status
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   useEffect(() => {
     setColumnFilters(
       statusFilter === "all" ? [] : [{ id: "status", value: statusFilter }]
     );
   }, [statusFilter]);
+
+  // Reset pagination when search, grouping, or filters change
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [debouncedSearch, grouping, statusFilter]);
 
   // ── Column definitions ────────────────────────────────────────
   const columns = useMemo<ColumnDef<AdCampaign>[]>(
@@ -319,7 +319,8 @@ export function AdsTable() {
     globalFilter: debouncedSearch,
     grouping,
     columnFilters,
-  }), [sorting, debouncedSearch, grouping, columnFilters]);
+    pagination,
+  }), [sorting, debouncedSearch, grouping, columnFilters, pagination]);
 
   // ── Table instance ────────────────────────────────────────────
   const table = useReactTable({
@@ -350,25 +351,14 @@ export function AdsTable() {
     getPaginationRowModel: getPaginationRowModel(),
     getGroupedRowModel: getGroupedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-    initialState: {
-      pagination: { pageSize: 25 },
-    },
+    onPaginationChange: setPagination,
+    autoResetPageIndex: false,
   });
 
   const rows = table.getRowModel().rows;
 
   function handleGroupByChange(value: string) {
     setGrouping(value === "none" ? [] : [value]);
-  }
-
-  // ── Mounted guard ─────────────────────────────────────────────
-  if (!mounted) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center text-muted-foreground min-h-[400px]">
-        <Loader2 className="size-6 animate-spin mb-2" />
-        <p className="text-sm">Initializing table...</p>
-      </div>
-    );
   }
 
   // ── Empty state ───────────────────────────────────────────────

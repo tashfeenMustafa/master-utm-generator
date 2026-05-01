@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/sheet";
 import { UtmGeneratorForm } from "@/components/organic/utm-generator-form";
 import { ResultCard } from "@/components/organic/result-card";
-import { LinksTable } from "@/components/organic/links-table";
 import { IntroSection } from "@/components/organic/intro-section";
 import { PremiumFeatureBanner } from "@/components/layout/premium-feature-banner";
+import { LinksTable } from "@/components/organic/links-table";
 import type { UtmLink } from "@/lib/types";
 
 export default function OrganicPage() {

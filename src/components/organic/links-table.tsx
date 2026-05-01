@@ -290,6 +290,7 @@ export function LinksTable({ refreshKey, onAction }: LinksTableProps) {
   const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
   const [grouping, setGrouping] = useState<GroupingState>([]);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -311,6 +312,11 @@ export function LinksTable({ refreshKey, onAction }: LinksTableProps) {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Reset pagination when search or grouping changes
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [debouncedSearch, grouping]);
 
   // ── Column definitions ────────────────────────────────────────
   const columns = useMemo<ColumnDef<UtmLink>[]>(
@@ -425,7 +431,8 @@ export function LinksTable({ refreshKey, onAction }: LinksTableProps) {
     sorting,
     globalFilter: debouncedSearch,
     grouping,
-  }), [sorting, debouncedSearch, grouping]);
+    pagination,
+  }), [sorting, debouncedSearch, grouping, pagination]);
 
   // ── Table instance ────────────────────────────────────────────
   const table = useReactTable({
@@ -453,9 +460,8 @@ export function LinksTable({ refreshKey, onAction }: LinksTableProps) {
     getPaginationRowModel: getPaginationRowModel(),
     getGroupedRowModel: getGroupedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-    initialState: {
-      pagination: { pageSize: 25 },
-    },
+    onPaginationChange: setPagination,
+    autoResetPageIndex: false,
   });
 
   const rows = table.getRowModel().rows;

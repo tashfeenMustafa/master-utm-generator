@@ -1,7 +1,8 @@
 import type { AdCampaign } from "@/lib/types";
 
 function daysAgo(n: number): string {
-  const d = new Date();
+  // Use a fixed reference date so SSR and client match exactly to prevent hydration errors
+  const d = new Date("2026-05-01T12:00:00Z");
   d.setDate(d.getDate() - n);
   return d.toISOString();
 }
